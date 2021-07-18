@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+
+    <body>
+        <script type="module">
+            import NetOut from "./NetOut.mjs";
+            import NetCalc from "./NetCalc.mjs";
+            import NetIn from "./NetIn.mjs";
+
+            window.NetOut = NetOut;
+            window.NetCalc = NetCalc;
+            window.NetIn = NetIn;
+
+            function getRandomInt(max) {
+                return Math.floor(Math.random() * max);
+            }
+
+            window.testDeser = function (arr) {
+                const dataview = new DataView(Int8Array.from(arr).buffer);
+                const netin = new NetIn(dataview);
+
+                // You have to read them in order.
+                return {
+                    testLong: netin.readBigInt64(),
+                    testString: netin.readString(),
+                    testFloat: netin.readFloat32()
+                };
+            };
+
+            window.testSer = function () {
+                const data = {
+                    testLong: BigInt(getRandomInt(10000)),
+                    testString: "Hello from JavaScript!",
+                    testFloat: Math.random(),
+                };
+
+                const calc = new NetCalc();
+
+                calc.allocateBigInt64();
+                calc.allocateString(data.testString);
+                calc.allocateFloat32();
+
+                const buffer = new ArrayBuffer(calc.requiredBytes);
+
+                const netOut = new NetOut(buffer);
+
+                netOut.writeBigInt64(data.testLong);
+                netOut.writeString(data.testString);
+                netOut.writeFloat32(data.testFloat);
+
+                console.log(data);
+                console.log("\nPaste this into the Java program:");
+                console.log(new Int8Array(buffer).join(", "));
+            };
+        </script>
+    </body>
+
+</html>
